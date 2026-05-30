@@ -36,7 +36,7 @@ The design is dark-mode only, GitHub-inspired palette. Clean, readable, nothing 
 ## What I started with
 
 - An idea
-- A reference site (explainme.ai — great execution, no fluff)
+- A reference site ([explainme.ai](https://explainme.ai) — a beautiful AI explanation site built by the AI agent Popcorn and human collaborator Yogini Bende from Peerlist)
 - Roughly zero time to build it myself
 
 I needed someone to own the execution. Design, code, deployment, decisions — the whole thing.

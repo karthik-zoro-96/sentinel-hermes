@@ -111,7 +111,8 @@ const facts = [
     <input type="email" placeholder="you@email.com" required class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent font-sans" />
     <button type="submit" class="w-full px-3 py-2 bg-accent text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer">Subscribe</button>
   </form>
-  <p class="text-text-dim text-xs mt-2">Every Tuesday &amp; Friday. No spam, ever.</p>
+  <p class="text-text-dim text-xs mt-2">Every Tuesday & Friday. No spam, ever.</p>
+  <p id="subscriber-count" class="text-text-dim text-xs mt-1"></p>
 </div>
 
 <script>
@@ -146,6 +147,18 @@ const facts = [
       setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 3000);
     }
   });
+
+  async function fetchSubscriberCount() {
+    try {
+      const res = await fetch('/api/subscribe');
+      const data = await res.json();
+      const el = document.getElementById('subscriber-count');
+      if (el && data.count !== null && data.count !== undefined) {
+        el.textContent = `${data.count.toLocaleString()} readers subscribed`;
+      }
+    } catch {}
+  }
+  fetchSubscriberCount();
 </script>
 
 <!-- Did You Know -->

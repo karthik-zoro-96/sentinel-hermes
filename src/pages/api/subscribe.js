@@ -1,5 +1,42 @@
 export const prerender = false;
 
+export async function GET() {
+  const apiKey = import.meta.env.BUTTONDOWN_API_KEY;
+
+  if (!apiKey) {
+    return new Response(JSON.stringify({ count: null }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    const res = await fetch('https://app.buttondown.email/api/v1/subscribers', {
+      headers: {
+        Authorization: `Token ${apiKey}`,
+      },
+    });
+
+    if (!res.ok) {
+      return new Response(JSON.stringify({ count: null }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const data = await res.json();
+    return new Response(JSON.stringify({ count: data.count }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch {
+    return new Response(JSON.stringify({ count: null }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
 export async function POST({ request }) {
   const { email } = await request.json();
 

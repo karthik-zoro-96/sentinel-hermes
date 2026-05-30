@@ -127,18 +127,20 @@ const featured = articles.slice(0, 6);
       btn.disabled = true;
       btn.textContent = '...';
       try {
-        const res = await fetch('/api/subscribe', {
+        const res = await fetch('https://app.buttondown.email/api/v1/subscribers', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
+          headers: {
+            'Authorization': 'Token 3a9df09a-a9d3-4835-89ee-c5095144eb32',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, tags: ['cyberplain'] }),
         });
-        const data = await res.json();
-        if (res.ok) {
+        if (res.ok || res.status === 400) {
           input.value = '';
-          btn.textContent = data.message || 'Done!';
-          setTimeout(() => btn.textContent = 'Subscribe', 3000);
+          btn.textContent = "You're in!";
+          setTimeout(() => btn.textContent = 'Subscribe', 4000);
         } else {
-          btn.textContent = data.error || 'Error';
+          btn.textContent = 'Error';
           setTimeout(() => btn.textContent = 'Subscribe', 3000);
         }
       } catch {

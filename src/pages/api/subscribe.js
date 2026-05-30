@@ -11,7 +11,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch('https://app.buttondown.email/api/v1/subscribers', {
+    const res = await fetch('https://api.buttondown.com/v1/subscribers?status=active', {
       headers: {
         Authorization: `Token ${apiKey}`,
       },

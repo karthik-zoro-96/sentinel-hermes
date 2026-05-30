@@ -79,6 +79,12 @@ const relatedArticles = topicArticles.filter(s => s !== entry.slug).slice(0, 3).
             <input type="email" placeholder="you@example.com" required class="flex-1 px-4 py-2.5 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
             <button type="submit" class="px-5 py-2.5 bg-accent text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer">Subscribe</button>
           </form>
+          <div class="mt-4 text-center">
+            <p class="text-text-dim text-sm flex items-center justify-center gap-1.5">
+              🎓 <span class="font-semibold text-text"><span class="subscriber-count">...</span> people</span> already learning
+            </p>
+            <p class="text-text-muted text-[0.7rem] mt-1">Powered by <span class="text-accent font-medium">Buttondown</span></p>
+          </div>
         </section>
       </main>
 

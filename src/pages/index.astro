@@ -33,7 +33,12 @@ const featured = articles.slice(0, 6);
               Subscribe
             </button>
           </form>
-          <p class="text-xs text-text-dim mt-2">New articles every Tuesday & Friday.</p>
+          <div class="mt-4 flex flex-col text-sm">
+            <p class="text-text-dim flex items-center gap-2">
+              🎓 <span class="font-semibold text-text"><span class="subscriber-count">...</span> people</span> already learning
+            </p>
+            <p class="text-text-muted text-xs mt-1 ml-7">Powered by <span class="text-accent font-medium">Buttondown</span></p>
+          </div>
         </section>
 
         <!-- Articles -->
@@ -101,6 +106,12 @@ const featured = articles.slice(0, 6);
               Subscribe
             </button>
           </form>
+          <div class="mt-3 text-center">
+            <p class="text-text-dim text-xs flex items-center justify-center gap-1.5">
+              🎓 <span class="font-semibold text-text"><span class="subscriber-count">...</span> people</span> already learning
+            </p>
+            <p class="text-text-muted text-[0.65rem] mt-1">Powered by <span class="text-accent font-medium">Buttondown</span></p>
+          </div>
         </div>
 
         <!-- Suggest -->
@@ -155,6 +166,18 @@ const featured = articles.slice(0, 6);
     document.getElementById('sidebar-sub')?.addEventListener('submit', (e) => {
       subscribe(e, e.target.querySelector('input'));
     });
+
+    async function fetchSubscriberCount() {
+      try {
+        const res = await fetch('/api/subscribe');
+        const data = await res.json();
+        const els = document.querySelectorAll('.subscriber-count');
+        if (els.length && data.count !== null && data.count !== undefined) {
+          els.forEach(el => el.textContent = data.count.toLocaleString());
+        }
+      } catch {}
+    }
+    fetchSubscriberCount();
 
     // Facts rotation
     const facts = [

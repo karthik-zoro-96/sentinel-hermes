@@ -75,7 +75,7 @@ const relatedArticles = topicArticles.filter(s => s !== entry.slug).slice(0, 3).
         <section class="mt-8 text-center bg-bg-card border border-border rounded-xl p-8">
           <h3 class="text-lg font-semibold mb-2">Get new explanations in your inbox</h3>
           <p class="text-text-dim text-sm mb-4">Every Tuesday & Friday. No spam, ever.</p>
-          <form class="flex gap-2 max-w-md mx-auto" onsubmit="event.preventDefault();const i=this.querySelector('input');if(i.value){alert('Thanks: '+i.value);i.value='';}">
+          <form id="article-sub" class="flex gap-2 max-w-md mx-auto">
             <input type="email" placeholder="you@example.com" required class="flex-1 px-4 py-2.5 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
             <button type="submit" class="px-5 py-2.5 bg-accent text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer">Subscribe</button>
           </form>
@@ -88,4 +88,38 @@ const relatedArticles = topicArticles.filter(s => s !== entry.slug).slice(0, 3).
       </aside>
     </div>
   </div>
+
+  <script>
+    const form = document.getElementById('article-sub');
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = form.querySelector('input');
+      const btn = form.querySelector('button');
+      const email = input.value.trim();
+      if (!email) return;
+
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      try {
+        const res = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          input.value = '';
+          btn.textContent = data.message || "You're in! 🎉";
+          setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 4000);
+        } else {
+          btn.textContent = data.error || 'Error. Try again.';
+          setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 3000);
+        }
+      } catch {
+        btn.textContent = 'Error. Try again.';
+        setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 3000);
+      }
+    });
+  </script>
 </Base>

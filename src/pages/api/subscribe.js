@@ -12,30 +12,40 @@ export async function POST({ request }) {
 
   const apiKey = import.meta.env.BUTTONDOWN_API_KEY;
 
-  const res = await fetch('https://app.buttondown.email/api/v1/subscribers', {
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'Server misconfiguration.' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const res = await fetch('https://api.buttondown.com/v1/subscribers', {
     method: 'POST',
     headers: {
       Authorization: `Token ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ email, tags: ['cyberplain'] }),
+    body: JSON.stringify({ email_address: email, tags: ['cyberplain'] }),
   });
 
+  // 400 = already subscribed — treat as success with friendly message
   if (res.status === 400) {
-    return new Response(JSON.stringify({ message: "You're in!" }), {
+    return new Response(JSON.stringify({ message: 'Already subscribed!' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
   if (!res.ok) {
-    return new Response(JSON.stringify({ error: 'Could not subscribe.' }), {
-      status: 500,
+    const body = await res.text();
+    console.error('Buttondown error', res.status, body);
+    return new Response(JSON.stringify({ error: 'Could not subscribe. Please try again.' }), {
+      status: 502,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  return new Response(JSON.stringify({ message: "You're in!" }), {
+  return new Response(JSON.stringify({ message: "You're in! 🎉" }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
   });

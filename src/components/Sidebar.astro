@@ -108,11 +108,45 @@ const facts = [
 <div class="bg-bg-card border border-border rounded-xl p-5 mb-6">
   <h2 class="text-xs uppercase tracking-widest text-text-dim font-semibold mb-3">✉️ Newsletter</h2>
   <form id="newsletter-form" class="space-y-2">
-    <input type="email" placeholder="you@email.com" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent font-sans" />
+    <input type="email" placeholder="you@email.com" required class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent font-sans" />
     <button type="submit" class="w-full px-3 py-2 bg-accent text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer">Subscribe</button>
   </form>
-  <p class="text-text-dim text-xs mt-2">Every Tuesday & Friday. No spam, ever.</p>
+  <p class="text-text-dim text-xs mt-2">Every Tuesday &amp; Friday. No spam, ever.</p>
 </div>
+
+<script>
+  const form = document.getElementById('newsletter-form');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = form.querySelector('input');
+    const btn = form.querySelector('button');
+    const email = input.value.trim();
+    if (!email) return;
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        input.value = '';
+        btn.textContent = data.message || "You're in! 🎉";
+        setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 4000);
+      } else {
+        btn.textContent = data.error || 'Error. Try again.';
+        setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 3000);
+      }
+    } catch {
+      btn.textContent = 'Error. Try again.';
+      setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 3000);
+    }
+  });
+</script>
 
 <!-- Did You Know -->
 <div class="bg-bg-card border border-border rounded-xl p-5 mb-6">

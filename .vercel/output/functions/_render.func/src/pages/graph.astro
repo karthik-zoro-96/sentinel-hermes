@@ -1,0 +1,175 @@
+---
+import Base from '../layouts/Base.astro';
+import { TOPICS } from '../config';
+import { getCollection } from 'astro:content';
+
+const articles = await getCollection('articles');
+const slugs = articles.map(a => a.slug);
+const colors = ['#6c5ce7', '#e17055', '#00b894', '#fdcb6e', '#0984e3', '#e84393', '#00cec9'];
+
+const topicData = TOPICS.map(t => ({
+  title: t.title,
+  emoji: t.emoji,
+  articles: t.articles,
+}));
+---
+
+<Base title="Graph">
+  <div class="max-w-[1200px] mx-auto px-6 py-8">
+    <main>
+      <a href="/" class="inline-block mb-4 text-text-muted text-sm hover:text-text transition-colors">← Back home</a>
+      <h1 class="text-2xl md:text-3xl font-bold mb-2">Topic Graph</h1>
+      <p class="text-text-muted mb-8">How cybersecurity concepts connect. Click a node to explore.</p>
+
+      <div class="relative w-full h-[550px] bg-bg-card border border-border rounded-xl overflow-hidden" id="graph-container">
+        <canvas id="graph-canvas" class="w-full h-full"></canvas>
+      </div>
+
+      <div class="mt-8">
+        <h3 class="text-sm uppercase tracking-widest text-text-dim font-semibold mb-3">Legend</h3>
+        <div class="flex flex-wrap gap-2">
+          {TOPICS.map((t, i) => (
+            <span class="badge text-white" style={`background:${colors[i % colors.length]}`}>{t.emoji} {t.title}</span>
+          ))}
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="application/json" id="graph-data">
+    {"topics":[{"slug":"basics","title":"The Basics","articles":["what-is-cybersecurity","threats-vulnerabilities-risks","cia-triad","what-is-encryption"]},{"slug":"attacks","title":"How Attacks Work","articles":["what-is-phishing","what-is-malware","what-is-ransomware","what-is-ddos","what-is-social-engineering","what-is-a-zero-day"]},{"slug":"defense","title":"How Defense Works","articles":["what-is-a-firewall","what-is-antivirus","what-is-mfa","what-is-a-vpn","what-is-zero-trust","what-is-endpoint-detection"]},{"slug":"identity","title":"Identity & Access","articles":["what-is-authentication","what-are-credentials","what-is-identity-theft","what-is-privilege-escalation"]},{"slug":"data","title":"Data & Privacy","articles":["what-is-a-data-breach","what-is-the-dark-web","what-is-gdpr","what-is-data-encryption-at-rest"]},{"slug":"organizations","title":"For Organizations","articles":["what-is-incident-response","what-is-a-security-audit","what-is-penetration-testing","what-is-compliance"]},{"slug":"advanced","title":"Advanced Concepts","articles":["what-are-supply-chain-attacks","what-is-cyber-warfare","what-is-offensive-security","what-is-threat-intelligence"]}],"slugs":["cia-triad","threats-vulnerabilities-risks","what-are-credentials","what-are-supply-chain-attacks","what-is-a-data-breach","what-is-a-firewall","what-is-a-security-audit","what-is-a-vpn","what-is-a-zero-day","what-is-antivirus","what-is-authentication","what-is-compliance","what-is-cyber-warfare","what-is-cybersecurity","what-is-data-encryption-at-rest","what-is-ddos","what-is-encryption","what-is-endpoint-detection","what-is-gdpr","what-is-identity-theft","what-is-incident-response","what-is-malware","what-is-mfa","what-is-offensive-security","what-is-penetration-testing","what-is-phishing","what-is-privilege-escalation","what-is-ransomware","what-is-social-engineering","what-is-the-dark-web","what-is-threat-intelligence","what-is-zero-trust"],"colors":["#6c5ce7","#e17055","#00b894","#fdcb6e","#0984e3","#e84393","#00cec9"]}
+  </script>
+
+  <script>
+    (function() {
+      const data = JSON.parse(document.getElementById('graph-data').textContent);
+      const { topics, slugs, colors } = data;
+
+      const container = document.getElementById('graph-container');
+      const canvas = document.getElementById('graph-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        initNodes();
+        draw();
+      }
+
+      let nodes = [];
+      function initNodes() {
+        nodes = [];
+        topics.forEach((topic, ti) => {
+          topic.articles.forEach((slug) => {
+            const exists = slugs.includes(slug);
+            nodes.push({
+              id: slug,
+              label: slug.replace(/-/g, ' ').replace(/what (is|are) /i, ''),
+              color: colors[ti % colors.length],
+              exists,
+              x: canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.5,
+              y: canvas.height / 2 + (Math.random() - 0.5) * canvas.height * 0.5,
+              vx: 0, vy: 0, r: exists ? 8 : 5,
+            });
+          });
+        });
+      }
+
+      const links = [];
+      topics.forEach(topic => {
+        for (let i = 0; i < topic.articles.length - 1; i++) {
+          links.push({ s: topic.articles[i], t: topic.articles[i + 1] });
+        }
+      });
+
+      const cross = [
+        ['what-is-cybersecurity','threats-vulnerabilities-risks'],
+        ['what-is-encryption','what-is-a-vpn'],
+        ['what-is-phishing','what-is-social-engineering'],
+        ['what-is-malware','what-is-ransomware'],
+        ['what-is-authentication','what-is-mfa'],
+        ['what-is-a-firewall','what-is-zero-trust'],
+        ['what-is-a-data-breach','what-is-incident-response'],
+        ['what-is-a-zero-day','what-are-supply-chain-attacks'],
+        ['what-is-cyber-warfare','what-is-threat-intelligence'],
+        ['what-is-antivirus','what-is-endpoint-detection'],
+        ['what-is-identity-theft','what-are-credentials'],
+        ['what-is-penetration-testing','what-is-compliance'],
+      ];
+      cross.forEach(([s, t]) => { if (nodes.find(n => n.id === s) && nodes.find(n => n.id === t)) links.push({ s, t, cross: true }); });
+
+      function simulate() {
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const dx = nodes[j].x - nodes[i].x, dy = nodes[j].y - nodes[i].y;
+            const d = Math.sqrt(dx * dx + dy * dy) || 1;
+            const f = 2000 / (d * d);
+            nodes[i].vx -= (dx / d) * f; nodes[i].vy -= (dy / d) * f;
+            nodes[j].vx += (dx / d) * f; nodes[j].vy += (dy / d) * f;
+          }
+        }
+        links.forEach(l => {
+          const s = nodes.find(n => n.id === l.s), t = nodes.find(n => n.id === l.t);
+          if (!s || !t) return;
+          const dx = t.x - s.x, dy = t.y - s.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+          const f = (d - 130) * 0.005, fx = (dx / d) * f, fy = (dy / d) * f;
+          s.vx += fx; s.vy += fy; t.vx -= fx; t.vy -= fy;
+        });
+        nodes.forEach(n => {
+          n.vx += (canvas.width / 2 - n.x) * 0.001;
+          n.vy += (canvas.height / 2 - n.y) * 0.001;
+          n.vx *= 0.9; n.vy *= 0.9;
+          n.x += n.vx; n.y += n.vy;
+          n.x = Math.max(40, Math.min(canvas.width - 40, n.x));
+          n.y = Math.max(40, Math.min(canvas.height - 40, n.y));
+        });
+      }
+
+      const textColor = () => document.documentElement.classList.contains('light') ? 'rgba(26,26,46,0.8)' : 'rgba(232,232,240,0.8)';
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        links.forEach(l => {
+          const s = nodes.find(n => n.id === l.s), t = nodes.find(n => n.id === l.t);
+          if (!s || !t) return;
+          ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y);
+          ctx.strokeStyle = l.cross ? 'rgba(100,100,120,0.12)' : 'rgba(100,100,120,0.25)';
+          ctx.lineWidth = l.cross ? 1 : 1.5; ctx.stroke();
+        });
+        ctx.font = '11px Inter, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        nodes.forEach(n => {
+          ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+          ctx.fillStyle = n.exists ? n.color : 'rgba(100,100,120,0.3)'; ctx.fill();
+          if (n.exists) {
+            ctx.fillStyle = textColor();
+            ctx.fillText(n.label, n.x, n.y + n.r + 14);
+          }
+        });
+      }
+
+      let running = true;
+      function loop() { if (running) { simulate(); draw(); requestAnimationFrame(loop); } }
+      resize();
+      loop();
+      setTimeout(() => { running = false; draw(); }, 6000);
+      window.addEventListener('resize', resize);
+
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        for (const n of nodes) {
+          if (Math.hypot(mx - n.x, my - n.y) < 15 && n.exists) {
+            window.location.href = '/articles/' + n.id; return;
+          }
+        }
+      });
+
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        canvas.style.cursor = nodes.some(n => Math.hypot(mx - n.x, my - n.y) < 15 && n.exists) ? 'pointer' : 'default';
+      });
+    })();
+  </script>
+</Base>

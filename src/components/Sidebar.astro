@@ -172,12 +172,3 @@ const facts = [
   <button id="nextFactBtn" class="text-xs border border-border rounded-md px-3 py-1 text-accent-light hover:bg-bg-hover transition-colors cursor-pointer">Next fact</button>
   <a href={`/articles/${facts[0].slug}`} id="factReadMore" class="block mt-3 text-xs text-accent hover:underline">Read more: {facts[0].text.split(' ').slice(0, 5).join(' ')}... →</a>
 </div>
-
-<!-- Suggest a Topic -->
-<div>
-  <h2 class="text-xs uppercase tracking-widest text-text-dim font-semibold mb-3">💡 Suggest a Topic</h2>
-  <form id="suggest-form" class="flex gap-2">
-    <textarea placeholder="e.g. How do password managers work?" rows="2" class="flex-1 min-w-0 px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent resize-none font-sans"></textarea>
-    <button type="submit" class="px-4 py-2 bg-accent text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer shrink-0">Send</button>
-  </form>
-</div>

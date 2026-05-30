@@ -1,0 +1,132 @@
+---
+// Fetch live security news from Hacker News and Reddit r/netsec
+async function fetchHNNews() {
+  try {
+    const res = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
+    const ids = await res.json();
+    const top10 = ids.slice(0, 30);
+
+    const stories = await Promise.all(
+      top10.map(id =>
+        fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+          .then(r => r.json())
+          .catch(() => null)
+      )
+    );
+
+    const securityKeywords = [
+      'vulnerability', 'breach', 'ransomware', 'malware', 'cve', 'zero-day',
+      'exploit', 'patch', 'security', 'hack', 'attack', 'cyber', 'phishing',
+      'cve-', 'data leak', 'password', 'authentication', 'firewall', 'malicious'
+    ];
+
+    return stories
+      .filter(s => s && s.title && s.url)
+      .filter(s => {
+        const title = s.title.toLowerCase();
+        return securityKeywords.some(k => title.includes(k));
+      })
+      .slice(0, 3)
+      .map(s => ({
+        title: s.title.length > 80 ? s.title.slice(0, 77) + '...' : s.title,
+        url: s.url,
+        source: 'Hacker News',
+        tag: s.title.toLowerCase().includes('patch') || s.title.toLowerCase().includes('fix') ? 'PATCH' : 'INCIDENT',
+        color: s.title.toLowerCase().includes('patch') || s.title.toLowerCase().includes('fix') ? 'bg-accent/20 text-accent-light' : 'bg-danger/20 text-danger',
+        date: getRelativeTime(s.time),
+      }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchRedditNews() {
+  try {
+    const res = await fetch('https://www.reddit.com/r/netsec.json?limit=15');
+    const data = await res.json();
+    return data.data.children
+      .slice(0, 10)
+      .map(item => ({
+        title: item.data.title.length > 80 ? item.data.title.slice(0, 77) + '...' : item.data.title,
+        url: item.data.url.startsWith('/r/') ? `https://reddit.com${item.data.permalink}` : item.data.url,
+        source: 'r/netsec',
+        tag: item.data.link_flair_text || (item.data.title.toLowerCase().includes('patch') ? 'PATCH' : 'INCIDENT'),
+        color: item.data.link_flair_text === 'Patch' || item.data.title.toLowerCase().includes('patch') ? 'bg-accent/20 text-accent-light' : 'bg-danger/20 text-danger',
+        date: getRelativeTime(Math.floor(item.data.created_utc)),
+      }));
+  } catch {
+    return [];
+  }
+}
+
+function getRelativeTime(timestamp) {
+  const diff = Math.floor(Date.now() / 1000) - timestamp;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 172800) return 'Yesterday';
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+const [hnNews, redditNews] = await Promise.all([fetchHNNews(), fetchRedditNews()]);
+const allNews = [...hnNews, ...redditNews].slice(0, 6);
+
+const newsItems = allNews.length > 0 ? allNews : [
+  { title: 'Cybersecurity news is loading...', tag: 'INCIDENT', color: 'bg-accent/20 text-accent-light', source: 'Hacker News', date: 'Just now', url: '#' },
+];
+
+const facts = [
+  { text: '91% of cyber attacks start with a phishing email.', slug: 'what-is-phishing' },
+  { text: 'The average cost of a data breach in 2024 was $4.88 million.', slug: 'what-is-a-data-breach' },
+  { text: 'It takes organizations an average of 277 days to identify and contain a breach.', slug: 'what-is-incident-response' },
+  { text: 'Roughly 80% of breaches involve compromised credentials.', slug: 'what-are-credentials' },
+  { text: 'The most hacked password is still "123456" — it appears in over 23 million breaches.', slug: 'what-is-authentication' },
+  { text: 'Cybercrime damages are projected to reach $10.5 trillion annually by 2025.', slug: 'what-is-cybersecurity' },
+  { text: 'Human error accounts for approximately 95% of cybersecurity breaches.', slug: 'what-is-a-security-audit' },
+  { text: 'A ransomware attack happens every 11 seconds.', slug: 'what-is-ransomware' },
+  { text: 'Only 5% of companies\' folders are properly protected.', slug: 'what-is-data-encryption-at-rest' },
+  { text: 'The first computer virus, Creeper, was detected in 1971.', slug: 'what-is-malware' },
+];
+---
+
+<!-- Today in Security -->
+<div class="bg-bg-card border border-border rounded-xl p-5 mb-6">
+  <h2 class="text-xs uppercase tracking-widest text-text-dim font-semibold mb-3">📡 Today in Security</h2>
+  <div>
+    {newsItems.map(item => (
+      <div class="py-2.5 border-b border-border last:border-0">
+        <a href={item.url} target="_blank" rel="noopener noreferrer" class="block text-xs leading-relaxed hover:text-accent-light transition-colors">
+          <span class={`badge ${item.color} mr-1.5`}>{item.tag}</span>
+          {item.title}
+        </a>
+        <div class="text-text-dim text-[0.65rem] mt-1">{item.source} · {item.date}</div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<!-- Newsletter -->
+<div class="bg-bg-card border border-border rounded-xl p-5 mb-6">
+  <h2 class="text-xs uppercase tracking-widest text-text-dim font-semibold mb-3">✉️ Newsletter</h2>
+  <form id="newsletter-form" class="space-y-2">
+    <input type="email" placeholder="you@email.com" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent font-sans" />
+    <button type="submit" class="w-full px-3 py-2 bg-accent text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer">Subscribe</button>
+  </form>
+  <p class="text-text-dim text-xs mt-2">Every Tuesday & Friday. No spam, ever.</p>
+</div>
+
+<!-- Did You Know -->
+<div class="bg-bg-card border border-border rounded-xl p-5 mb-6">
+  <h2 class="text-xs uppercase tracking-widest text-text-dim font-semibold mb-3">🧠 Did You Know?</h2>
+  <p class="text-sm mb-3" id="didYouKnow" data-facts={JSON.stringify(facts)} data-index="0">{facts[0].text}</p>
+  <button id="nextFactBtn" class="text-xs border border-border rounded-md px-3 py-1 text-accent-light hover:bg-bg-hover transition-colors cursor-pointer">Next fact</button>
+  <a href={`/articles/${facts[0].slug}`} id="factReadMore" class="block mt-3 text-xs text-accent hover:underline">Read more: {facts[0].text.split(' ').slice(0, 5).join(' ')}... →</a>
+</div>
+
+<!-- Suggest a Topic -->
+<div>
+  <h2 class="text-xs uppercase tracking-widest text-text-dim font-semibold mb-3">💡 Suggest a Topic</h2>
+  <form id="suggest-form" class="flex gap-2">
+    <textarea placeholder="e.g. How do password managers work?" rows="2" class="flex-1 min-w-0 px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent resize-none font-sans"></textarea>
+    <button type="submit" class="px-4 py-2 bg-accent text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer shrink-0">Send</button>
+  </form>
+</div>

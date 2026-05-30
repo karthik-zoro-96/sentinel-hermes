@@ -2,15 +2,16 @@
   "name": "cyberplain",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/node": "^5.3.6",
     "@astrojs/tailwind": "^5.1.0",
-    "@astrojs/vercel": "^10.0.8",
     "@tailwindcss/typography": "^0.5.15",
     "astro": "^4.16.0",
     "tailwindcss": "^3.4.0"
